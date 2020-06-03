@@ -26,6 +26,7 @@ public class ByteToObjectDecoder extends ReplayingDecoder<ObjectDecoderState> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
+
         switch (state()) {
             case READ_HEADER:
                 byte[] b = new byte[1];
@@ -72,8 +73,9 @@ public class ByteToObjectDecoder extends ReplayingDecoder<ObjectDecoderState> {
             case READ_END:
                 ByteBuf end = in.readBytes(1);
                 checkpoint(ObjectDecoderState.READ_HEADER);
-                return;
 
+                out.add(new MessageHexBody());
+                return;
             default:
                 throw new Error("no ... ");
 
