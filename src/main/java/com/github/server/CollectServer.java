@@ -1,5 +1,6 @@
 package com.github.server;
 
+import com.github.server.handle.ByteToObjectDecoder;
 import com.github.server.handle.CollectServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -41,9 +42,8 @@ public class CollectServer {
                             System.out.println("Port:" + channel.localAddress().getPort());
                             System.out.println("报告完毕");
 
-                            channel.pipeline().addLast(new StringEncoder(Charset.defaultCharset()));
+                            channel.pipeline().addLast(new ByteToObjectDecoder());
                             channel.pipeline().addLast(new CollectServerHandler());
-                            channel.pipeline().addLast(new ByteArrayEncoder());
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG,1024)
