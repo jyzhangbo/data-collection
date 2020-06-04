@@ -2,6 +2,7 @@ package com.github.server;
 
 import com.github.server.handle.ByteToObjectDecoder;
 import com.github.server.handle.CollectServerHandler;
+import com.github.server.handle.HexToValueDecoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -43,6 +44,7 @@ public class CollectServer {
                             System.out.println("报告完毕");
 
                             channel.pipeline().addLast(new ByteToObjectDecoder());
+                            channel.pipeline().addLast(new HexToValueDecoder());
                             channel.pipeline().addLast(new CollectServerHandler());
                         }
                     })

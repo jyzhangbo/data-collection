@@ -1,12 +1,11 @@
 package com.github.server.handle;
 
 import com.github.server.model.MessageHexBody;
+import com.github.server.model.ObjectDecoderState;
 import com.github.server.util.TransformUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.ReplayingDecoder;
-import io.netty.util.CharsetUtil;
 import org.nutz.lang.Strings;
 
 import java.util.List;
@@ -18,6 +17,8 @@ import java.util.List;
 public class ByteToObjectDecoder extends ReplayingDecoder<ObjectDecoderState> {
 
     private int length;
+
+    private MessageHexBody body = new MessageHexBody();
 
     public ByteToObjectDecoder(){
         super(ObjectDecoderState.READ_HEADER);
@@ -38,32 +39,40 @@ public class ByteToObjectDecoder extends ReplayingDecoder<ObjectDecoderState> {
                 return;
             case READ_DEVID:
                 ByteBuf byteBuf = in.readBytes(12);
-                String devId = byteBuf.toString(CharsetUtil.UTF_8);
+                byte[] devId = new byte[12];
+                byteBuf.readBytes(devId);
+                body.devId = devId;
                 checkpoint(ObjectDecoderState.READ_VERSION);
                 return;
             case READ_VERSION:
-                ByteBuf V = in.readBytes(1);
+                ByteBuf version = in.readBytes(1);
                 checkpoint(ObjectDecoderState.READ_DEVTYPE);
                 return;
             case READ_DEVTYPE:
-                ByteBuf d = in.readBytes(2);
+                ByteBuf devType = in.readBytes(2);
                 checkpoint(ObjectDecoderState.READ_NUM);
                 return;
             case READ_NUM:
-                ByteBuf c = in.readBytes(1);
+                ByteBuf num = in.readBytes(1);
                 checkpoint(ObjectDecoderState.READ_COMMAND);
                 return;
             case READ_COMMAND:
-                ByteBuf ca = in.readBytes(1);
+                ByteBuf command = in.readBytes(1);
+                byte[] commandByte = new byte[1];
+                command.readBytes(commandByte);
+                body.command = commandByte;
                 checkpoint(ObjectDecoderState.READ_LENGTH);
                 return;
             case READ_LENGTH:
-                ByteBuf len = in.readBytes(2);
-                length = 100;
+                short i = in.readShort();
+                length = Short.toUnsignedInt(i);
                 checkpoint(ObjectDecoderState.READ_CONTENT);
                 return;
             case READ_CONTENT:
                 ByteBuf content = in.readBytes(length);
+                byte[] contentByte = new byte[length];
+                content.readBytes(contentByte);
+                body.content = contentByte;
                 checkpoint(ObjectDecoderState.READ_CHECK);
                 return;
             case READ_CHECK:
@@ -73,13 +82,18 @@ public class ByteToObjectDecoder extends ReplayingDecoder<ObjectDecoderState> {
             case READ_END:
                 ByteBuf end = in.readBytes(1);
                 checkpoint(ObjectDecoderState.READ_HEADER);
-
-                out.add(new MessageHexBody());
+                out.add(body);
                 return;
             default:
                 throw new Error("no ... ");
 
         }
 
+    }
+
+    public static void main(String[] args) {
+        short i = 1;
+        int length = Short.toUnsignedInt(i);
+        System.out.println(length);
     }
 }

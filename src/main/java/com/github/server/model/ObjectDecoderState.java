@@ -1,4 +1,4 @@
-package com.github.server.handle;
+package com.github.server.model;
 
 /**
  * @Author:zhangbo
